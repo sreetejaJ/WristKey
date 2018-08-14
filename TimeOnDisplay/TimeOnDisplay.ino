@@ -69,10 +69,6 @@ void printDateTime(const RtcDateTime& dt)
              dt.Second() );
   //Serial.print(datestring);
   Serial.println(counter);
-  if (newPress) {
-    counter++;
-    newPress = false;
-  }
   if ((counter % 2) == 0) {
     ClockFace1(dt);
   } else {
