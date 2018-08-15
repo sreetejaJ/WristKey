@@ -33,6 +33,10 @@ void setup() {
   #ifdef SERIAL
     Serial.begin(115200);
   #endif
+  //***************************OLED_SART***************************
+  u8g2.begin();
+  u8g2.clearBuffer();
+//***************************OLED_END****************************
   
 //***************************MEM_START***************************
   if (!EEPROM.begin(EEPROM_SIZE))
@@ -40,15 +44,19 @@ void setup() {
     #ifdef SERIAL
       Serial.println("failed to initialise EEPROM");
     #endif
+    u8g2.setFont(u8g2_font_t0_17_tf);
+    u8g2.setCursor(0, 20);
+    u8g2.print("Could not initialise EEPROM");
+    u8g2.setCursor(0, 40);
+    for(int i = 0; i < 5; i++){
+      u8g2.print("Restarting device in...  ");
+      u8g2.print(i);
+      delay(1000);
+    }
+    ESP.restart();
   }
   
 //***************************MEM_END*****************************
-
-//***************************OLED_SART***************************
-  u8g2.begin();
-  u8g2.clearBuffer();
-//***************************OLED_END****************************
-
 }
 
 void loop() {

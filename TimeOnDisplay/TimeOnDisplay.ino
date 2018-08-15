@@ -11,9 +11,12 @@ char* days[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturd
 char* months[] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 char * endings[] = { "st", "nd", "rd", "th"};
 
-bool newPress = false;
 int button = 38;
-int counter = 0;
+bool counter;
+
+unsigned long timenow = 0;
+int period = 100;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -41,10 +44,16 @@ void loop() {
   u8g2.clearBuffer();
   RtcDateTime now = Rtc.GetDateTime();
   printDateTime(now);
-  u8g2.sendBuffer();
-  delay(1000);
+  if(millis() > timenow + period){
+    u8g2.sendBuffer();
+    timenow = millis();
+  }
+  
   if (!digitalRead(button)) {
-    counter++;
+    while(!digitalRead(button)){
+      
+    }
+    counter = !counter;
     Serial.println("button pressed");
   }
   //****************DISPLAY***************
@@ -68,8 +77,7 @@ void printDateTime(const RtcDateTime& dt)
              dt.Minute(),
              dt.Second() );
   //Serial.print(datestring);
-  Serial.println(counter);
-  if ((counter % 2) == 0) {
+  if (counter) {
     ClockFace1(dt);
   } else {
     ClockFace2(dt);
