@@ -66,15 +66,15 @@ void loop() {
   Serial.print("\t");
   Serial.print(bState);
   Serial.print("\t");
-  Serial.print(digitalRead(button));
+  //Serial.print(digitalRead(button));
   Serial.print("\t");
-  Serial.print(counter);
+  //Serial.print(counter);
   Serial.print("\n");
-//  u8g2.clearBuffer();
-//  u8g2.setFont(u8g2_font_t0_18_tf);
-//  u8g2.setCursor(0, 30);
-//  u8g2.print(counter);
-//  u8g2.sendBuffer();
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_t0_18_tf);
+  u8g2.setCursor(0, 30);
+  u8g2.print(counter);
+  u8g2.sendBuffer();
   delay(10);        // delay in between reads for stability
 }
 
