@@ -1,22 +1,23 @@
-void showTime(){
+void showTime() {
   u8g2.clearBuffer();
   RtcDateTime now = Rtc.GetDateTime();
-  if(!clockface){
-    ClockFace1(now);
-  }else{
-    ClockFace2(now);
+  preferences.begin("settings", false);
+  switch (preferences.getUInt("ClockFace", 0)) {
+    case 0:
+      ClockFace1(now);
+      break;
+    case 1:
+      ClockFace2(now);
+      break;
+    default:
+      break;
   }
-  if(millis() > timenow + updateRate){
+  preferences.end();
+  if (millis() > timenow + updateRate) {
     u8g2.sendBuffer();
     timenow = millis();
   }
-  if (!digitalRead(button)) {
-    while(!digitalRead(button)){
-    //Wait for user to release
-    }
-    #ifdef SERIAL
-      Serial.println("button pressed");
-    #endif
+  if (getInput() == 10) {
     page = 1;
   }
   return;

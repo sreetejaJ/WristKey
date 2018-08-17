@@ -9,6 +9,7 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <Preferences.h>
 
 #define SERIAL 1    // For use when testing, set 0 for final upload
 
@@ -17,7 +18,6 @@ RtcDS3231<TwoWire> Rtc(Wire);
 char* days[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 char* months[] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 char * endings[] = { "st", "nd", "rd", "th"};
-
 //***************************RTC_END*****************************
 
 //***************************OLED_START**************************
@@ -33,7 +33,6 @@ int updateRate = 100;
 #define TAP_CODE_HASH_ADDR 0x20
 #define PACKETS_START_ADDR 0x40
 #define EEPROM_SIZE 4096
-
 //***************************MEM_END*****************************
 
 //***************************BLE_START***************************
@@ -75,7 +74,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 //***************************BLE_END****************************
 
 //***************************SETTINGS_START*********************
-bool clockface = false;
+Preferences preferences; 
 //***************************SETTINGS_END***********************
 
 //***************************HARDWARE_START*********************
@@ -136,7 +135,7 @@ void setup() {
   pServer->getAdvertising()->start();
 //***************************BLE_END****************************
 
-//***************************RTC_START***************************
+//***************************RTC_START**************************
   Rtc.Begin();
   if (!Rtc.GetIsRunning())
   {
@@ -147,13 +146,14 @@ void setup() {
   }
   Rtc.Enable32kHzPin(false);
   Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
-//***************************RTC_END*****************************
+//***************************RTC_END****************************
 
 //***************************HARDWARE_START*********************
   pinMode(button, INPUT);
   pinMode(encA, INPUT);
   pinMode(encB, INPUT);
 //***************************HARDWARE_STOP**********************
+
 
   showTime();
 }
@@ -168,12 +168,54 @@ void loop() {
       break;
     case 1:
       #ifdef SERIAL
-        Serial.println("Settings Menu");
+        Serial.println("Main Menu");
       #endif
-      delay(1000);
-      page = 0;
+      switch(menu("Settings", "System Info", "Exit", "")){
+        case 0:
+          settings();
+          break;
+        case 1:
+          sysInfo();
+          break;
+        case 2:
+          page = 0;
+          break;
+        default:
+          page = 0;
+          break;
+      }
       break;
     default:
       break;
   }
+}
+
+int getInput() {
+  if (!digitalRead(button)) {
+    while (!digitalRead(button)) {
+
+    }
+    #ifdef SERIAL
+      Serial.println("Button Pressed");
+    #endif
+    return 10;
+  }
+  if (!digitalRead(encA) && digitalRead(encB)) {
+    while (!digitalRead(encA) || !digitalRead(encB)) {
+      delay(10);
+    }
+    #ifdef SERIAL
+      Serial.println("Encoder Decreased");
+    #endif
+    return 1;
+  } else if (!digitalRead(encB) && digitalRead(encA)) {
+    while (!digitalRead(encA) || !digitalRead(encB)) {
+      delay(10);
+    }
+    #ifdef SERIAL
+      Serial.println("Encoder Increased");
+    #endif
+    return -1;
+  }
+  return 0;
 }
