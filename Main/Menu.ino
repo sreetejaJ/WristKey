@@ -3,10 +3,10 @@ int menu(String value1, String value2, String value3, String value4) {
   int lastPos = 0;
   bool first = true;
   int num = 1;
-  if(value3 != ""){
+  if (value3 != "") {
     num++;
   }
-  if(value4 != ""){
+  if (value4 != "") {
     num++;
   }
   while (true) {

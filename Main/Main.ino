@@ -11,13 +11,14 @@
 #include <BLE2902.h>
 #include <Preferences.h>
 
-#define SERIAL 1    // For use when testing, set 0 for final upload
+#define DEBUG    // For use when testing, set 0 for final upload
 
 //***************************RTC_START***************************
 RtcDS3231<TwoWire> Rtc(Wire);
 char* days[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 char* months[] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 char * endings[] = { "st", "nd", "rd", "th"};
+char * characters[] = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
 //***************************RTC_END*****************************
 
 //***************************OLED_START**************************
@@ -74,7 +75,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 //***************************BLE_END****************************
 
 //***************************SETTINGS_START*********************
-Preferences preferences; 
+Preferences preferences;
 //***************************SETTINGS_END***********************
 
 //***************************HARDWARE_START*********************
@@ -83,20 +84,20 @@ static byte encA = 37;
 static byte encB = 36;
 //***************************HARDWARE_STOP**********************
 void setup() {
-  #ifdef SERIAL
-    Serial.begin(115200);
-  #endif
-//***************************OLED_SART***************************
+#ifdef DEBUG
+  Serial.begin(115200);
+#endif
+  //***************************OLED_SART***************************
   u8g2.begin();
   u8g2.clearBuffer();
-//***************************OLED_END****************************
-  
-//***************************MEM_START***************************
+  //***************************OLED_END****************************
+
+  //***************************MEM_START***************************
   if (!EEPROM.begin(EEPROM_SIZE))
   {
-    #ifdef SERIAL
-      Serial.println("failed to initialise EEPROM");
-    #endif
+#ifdef DEBUG
+    Serial.println("failed to initialise EEPROM");
+#endif
     u8g2.setFont(u8g2_font_t0_17_tf);
     u8g2.setCursor(0, 20);
     u8g2.print("Could not initialise EEPROM");
@@ -106,9 +107,9 @@ void setup() {
     delay(3000);
     ESP.restart();
   }
-//***************************MEM_END*****************************
+  //***************************MEM_END*****************************
 
-//***************************BLE_START***************************
+  //***************************BLE_START***************************
   BLEDevice::init("wrsky");
 
   pServer = BLEDevice::createServer();
@@ -117,60 +118,60 @@ void setup() {
   BLEService *pService = pServer->createService(SERVICE_UUID);
 
   pTxCharacteristic = pService->createCharacteristic(
-                    CHARACTERISTIC_UUID_TX,
-                    BLECharacteristic::PROPERTY_NOTIFY
-                  );
-                      
+                        CHARACTERISTIC_UUID_TX,
+                        BLECharacteristic::PROPERTY_NOTIFY
+                      );
+
   pTxCharacteristic->addDescriptor(new BLE2902());
 
   BLECharacteristic * pRxCharacteristic = pService->createCharacteristic(
-                       CHARACTERISTIC_UUID_RX,
-                      BLECharacteristic::PROPERTY_WRITE
-                    );
+      CHARACTERISTIC_UUID_RX,
+      BLECharacteristic::PROPERTY_WRITE
+                                          );
 
   pRxCharacteristic->setCallbacks(new MyCallbacks());
 
   pService->start();
   pServer->getAdvertising()->addServiceUUID(SERVICE_UUID);
   pServer->getAdvertising()->start();
-//***************************BLE_END****************************
+  //***************************BLE_END****************************
 
-//***************************RTC_START**************************
+  //***************************RTC_START**************************
   Rtc.Begin();
   if (!Rtc.GetIsRunning())
   {
-    #ifdef SERIAL
-      Serial.println("RTC was not actively running, starting now");
-    #endif
+#ifdef DEBUG
+    Serial.println("RTC was not actively running, starting now");
+#endif
     Rtc.SetIsRunning(true);
   }
   Rtc.Enable32kHzPin(false);
   Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
-//***************************RTC_END****************************
+  //***************************RTC_END****************************
 
-//***************************HARDWARE_START*********************
+  //***************************HARDWARE_START*********************
   pinMode(button, INPUT);
   pinMode(encA, INPUT);
   pinMode(encB, INPUT);
-//***************************HARDWARE_STOP**********************
+  //***************************HARDWARE_STOP**********************
 
-
+  while(!Code());
   showTime();
 }
 
 void loop() {
-  switch(page){
+  switch (page) {
     case 0:
-      #ifdef SERIAL
-        Serial.println("Displaying Time");
-      #endif
+#ifdef DEBUG
+      Serial.println("Displaying Time");
+#endif
       showTime();
       break;
     case 1:
-      #ifdef SERIAL
-        Serial.println("Main Menu");
-      #endif
-      switch(menu("Settings", "System Info", "Exit", "")){
+#ifdef DEBUG
+      Serial.println("Main Menu");
+#endif
+      switch (menu("Settings", "System Info", "Exit", "")) {
         case 0:
           settings();
           break;
@@ -195,26 +196,26 @@ int getInput() {
     while (!digitalRead(button)) {
 
     }
-    #ifdef SERIAL
-      Serial.println("Button Pressed");
-    #endif
+#ifdef DEBUG
+    Serial.println("Button Pressed");
+#endif
     return 10;
   }
   if (!digitalRead(encA) && digitalRead(encB)) {
     while (!digitalRead(encA) || !digitalRead(encB)) {
       delay(10);
     }
-    #ifdef SERIAL
-      Serial.println("Encoder Decreased");
-    #endif
+#ifdef DEBUG
+    Serial.println("Encoder Decreased");
+#endif
     return 1;
   } else if (!digitalRead(encB) && digitalRead(encA)) {
     while (!digitalRead(encA) || !digitalRead(encB)) {
       delay(10);
     }
-    #ifdef SERIAL
-      Serial.println("Encoder Increased");
-    #endif
+#ifdef DEBUG
+    Serial.println("Encoder Increased");
+#endif
     return -1;
   }
   return 0;

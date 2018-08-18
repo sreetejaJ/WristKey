@@ -4,7 +4,7 @@
 
 
 #define EEPROM_SIZE 4096
-
+//#define DEBUG 
 
 void setup() {
   // put your setup code here, to run once:
@@ -13,9 +13,11 @@ void setup() {
   {
     Serial.print("failed to initialise EEPROM"); delay(1000000);
   }
+  pinMode(LED_BUILTIN, OUTPUT);
 
-  int addr = 0x21;
+  int addr = 0x00;
   int repeat = storeData("abcdefghijklmnop", "www.google.com", "SecurePassword42", "letmein", addr);
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
 void loop() {
@@ -28,7 +30,9 @@ int storeData(char * key, char * webHash, char * password, char * username, unsi
   EEPROM.write(addr, 0x00);                                                                       //Start with NULL
   int dataLenAddr = addr + 1;                                                                     //Save byte for data len
   addr += 2;
+#ifdef DEBUG
   Serial.println(addr);
+#endif
   //**************************************************************Website Hash*********************************************************
   byte shaResult[32];
 
@@ -43,25 +47,31 @@ int storeData(char * key, char * webHash, char * password, char * username, unsi
   mbedtls_md_update(&ctx, (unsigned char *) webHash, payloadLength);
   mbedtls_md_finish(&ctx, shaResult);
   mbedtls_md_free(&ctx);
-
+#ifdef DEBUG
   Serial.print("Hash: ");
-
+#endif
   for (int i = 0; i < sizeof(shaResult); i++)
   {
+#ifdef DEBUG
     char str[3];
     sprintf(str, "%02x", (int)shaResult[i]);
     Serial.print(str);
+#endif
     EEPROM.write(addr, shaResult[i]);
     addr++;
   }
+#ifdef DEBUG
   Serial.println();
   Serial.println(addr);
+#endif
   //**************************************************************Password Encrypter**********************************************************
   unsigned int repeats = strlen(password) / 16;
   unsigned int extra = strlen(password) % 16;
   unsigned int LenAddr = addr;
   addr++;
+#ifdef DEBUG
   Serial.print("Password: ");
+#endif
   for (int i = 0; i <= repeats; i++) {
     unsigned char output[16];
     char in[16];
@@ -78,21 +88,28 @@ int storeData(char * key, char * webHash, char * password, char * username, unsi
     mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_ENCRYPT, (const unsigned char*)in, output);
     mbedtls_aes_free( &aes );
     for (int k = 0; k < 16; k++) {
-      Serial.print(output[k], HEX);
       EEPROM.write(addr, output[k]);
       addr++;
+#ifdef DEBUG
+      Serial.print(output[k], HEX);
       Serial.print(" ");
+#endif
     }
+#ifdef DEBUG
     Serial.println();
+#endif
   }
+#ifdef DEBUG
   Serial.println(addr);
+#endif
   EEPROM.write(LenAddr, addr - LenAddr - 1);
   //**************************************************************Username Encrypter**********************************************************
   repeats = strlen(username) / 16;
   extra = strlen(username) % 16;
   LenAddr = addr;
-  Serial.println(addr);
+#ifdef DEBUG
   Serial.print("Username: ");
+#endif
   addr++;
   for (int i = 0; i <= repeats; i++) {
     unsigned char output[16];
@@ -110,14 +127,20 @@ int storeData(char * key, char * webHash, char * password, char * username, unsi
     mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_ENCRYPT, (const unsigned char*)in, output);
     mbedtls_aes_free( &aes );
     for (int k = 0; k < 16; k++) {
-      Serial.print(output[k], HEX);
       EEPROM.write(addr, output[k]);
       addr++;
+#ifdef DEBUG
+      Serial.print(output[k], HEX);
       Serial.print(" ");
+#endif
     }
+#ifdef DEBUG
     Serial.println();
+#endif
   }
+#ifdef DEBUG
   Serial.println(addr);
-  EEPROM.write(LenAddr, addr - LenAddr - 1);
+#endif
+  EEPROM.write(dataLenAddr, addr - dataLenAddr - 1);
   EEPROM.commit();
 }

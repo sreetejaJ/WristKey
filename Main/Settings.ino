@@ -1,10 +1,13 @@
 void settings() {
   while (true) {
-    switch (menu("Select style", "Exit", "", "")) {
+    switch (menu("Select style", "Reset Device", "Exit", "")) {
       case 0:
         selectFace();
         break;
       case 1:
+        resetDevice();
+        break;
+      case 2:
         return;
       default:
         break;
@@ -59,6 +62,45 @@ void selectFace() {
       pos = 1;
     }
     lastPos = pos;
+  }
+}
+
+void resetDevice(){
+  bool no = true;
+  while (true) {
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_t0_17_tf);
+    u8g2.setCursor(0, 15);
+    u8g2.print("All saved data");
+    u8g2.setCursor(0, 30);
+    u8g2.print("will be lost");
+    u8g2.setCursor(0, 45);
+    u8g2.print("Continue?");
+    u8g2.setCursor(75, 60);
+    u8g2.print("Yes");
+    u8g2.setCursor(30, 60);
+    u8g2.print("No");
+    if(no){
+      u8g2.drawBox(28,62, 20, 4);
+    }else{
+      u8g2.drawBox(73,62, 30, 4);
+    }
+    u8g2.sendBuffer();
+    bool last = no;
+    while(last == no){
+      int val = getInput();
+      if(val == 10){
+        //Button Pressed
+        if(no){
+          return;
+        }else{
+          ESP.restart();
+        }
+      }
+      if(val != 0){
+        no = !no;
+      }
+    }
   }
 }
 

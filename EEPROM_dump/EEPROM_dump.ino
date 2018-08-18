@@ -21,7 +21,7 @@ void setup()
     Serial.println("failed to initialise EEPROM"); delay(1000000);
   }
   Serial.println(" bytes read from Flash . Values are:");
-  for (int i = 0; i < EEPROM_SIZE; i++)
+  for (int i = 0; i < 84; i++)
   {
     Serial.print(byte(EEPROM.read(i)), HEX); Serial.print(" ");
   }

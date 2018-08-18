@@ -58,16 +58,16 @@ int storeData(char * key, char * webHash, char * password, char * username, unsi
     uNameLen += 1;
   }
   Serial.println(pwordLen);
-  //char * encrypted = returnEncrypted(password, key, Prepeats, Pextra);
+  char * encrypted = returnEncrypted(password, key, Prepeats, Pextra);
   Serial.println("Finished the encryption");
-  //Serial.print(encrypted);
+  Serial.print(encrypted);
 
 
   return 1;
 }
 
 
-char * returnEncrypted(char * input, char * key, unsigned int repeats, unsigned int extra,unsigned int addr){
+char * returnEncrypted(char * input, char * key, unsigned int repeats, unsigned int extra){
   Serial.println("returnEncrypted called!");
   if(input == NULL || key == NULL){
     return NULL;
