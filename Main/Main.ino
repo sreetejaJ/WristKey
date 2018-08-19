@@ -13,6 +13,37 @@
 
 #define DEBUG    // For use when testing, set 0 for final upload
 
+
+bool checkHash(String value, int startAddr) {
+  char attempt[value.length()];
+  value.toCharArray(attempt, value.length() + 1);
+
+  byte shaResult[32];
+  mbedtls_md_context_t ctx;
+  mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
+
+  const size_t payloadLength = strlen(attempt);
+
+  mbedtls_md_init(&ctx);
+  mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 0);
+  mbedtls_md_starts(&ctx);
+  mbedtls_md_update(&ctx, (unsigned char *) attempt, payloadLength);
+  mbedtls_md_finish(&ctx, shaResult);
+  mbedtls_md_free(&ctx);
+
+
+  for (int i = 0; i < sizeof(shaResult); i++) {
+    //Serial.print(shaResult[i], HEX);
+    //Serial.print(" ");
+    if (EEPROM.read(i + startAddr) != shaResult[i]) {
+      //Serial.println();
+      return false;
+    }
+  }
+  //Serial.println();
+  return true;
+}
+
 //***************************RTC_START***************************
 RtcDS3231<TwoWire> Rtc(Wire);
 char* days[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
@@ -42,6 +73,7 @@ BLECharacteristic * pTxCharacteristic;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 uint8_t txValue = 0;
+bool verified = false;
 
 #define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E" // UART service UUID
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -54,21 +86,36 @@ class MyServerCallbacks: public BLEServerCallbacks {
 
     void onDisconnect(BLEServer* pServer) {
       deviceConnected = false;
+      verified = false;
     }
 };
 
 class MyCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
       std::string rxValue = pCharacteristic->getValue();
-
-      if (rxValue.length() > 0) {
-        Serial.println("*********");
-        Serial.print("Received Value: ");
-        for (int i = 0; i < rxValue.length(); i++)
-          Serial.print(rxValue[i]);
-
-        Serial.println();
-        Serial.println("*********");
+      if (rxValue.length() > 4) {
+        String cmd;
+        for (int i = 0; i < 5; i ++) {
+          cmd += rxValue[i];
+        }
+        String dataIn;
+        for (int i = 5; i < rxValue.length(); i++) {
+          dataIn += rxValue[i];
+        }
+        if (cmd == "MPWD:") {
+#ifdef DEBUG
+          Serial.println(rxValue.length());
+          Serial.println(dataIn);
+#endif
+          if (checkHash(dataIn, 0x00)) {
+            verified = true;
+          }
+        }
+        if (verified) {
+#ifdef DEBUG
+          Serial.println("Device Verified");
+#endif
+        }
       }
     }
 };
@@ -155,7 +202,17 @@ void setup() {
   pinMode(encB, INPUT);
   //***************************HARDWARE_STOP**********************
 
-  while(!Code());
+  //while(!Code());
+  //Serial.println(NextAvailAddr());
+  String username;
+  String password;
+//  storeData("abcdefghijklmnop", "www.facebook.com", "SecurePassword42", "ZuccIsUnHackable", NextAvailAddr());
+//  Serial.println(findHash("www.facebook.com"));
+//  if(findHash("www.facebook.com") > 0){
+//    pullData(findHash("www.facebook.com"), username, password);
+//  }else{
+//    Serial.println("Hash not found");
+//  }
   showTime();
 }
 
@@ -163,7 +220,7 @@ void loop() {
   switch (page) {
     case 0:
 #ifdef DEBUG
-      Serial.println("Displaying Time");
+      //Serial.println("Displaying Time");
 #endif
       showTime();
       break;
@@ -189,6 +246,7 @@ void loop() {
     default:
       break;
   }
+  BLEMain();
 }
 
 int getInput() {

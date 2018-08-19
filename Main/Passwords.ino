@@ -1,4 +1,4 @@
-int storeData(char * key, char * webHash, char * password, char * username, unsigned int addr) {
+void storeData(char * key, char * webHash, char * password, char * username, unsigned int addr) {
   //**************************************************************DATA HEADER**********************************************************
   EEPROM.write(addr, 0x00);                                                                       //Start with NULL
   int dataLenAddr = addr + 1;                                                                     //Save byte for data len
@@ -80,10 +80,10 @@ int storeData(char * key, char * webHash, char * password, char * username, unsi
   repeats = strlen(username) / 16;
   extra = strlen(username) % 16;
   LenAddr = addr;
+  addr++;
 #ifdef DEBUG
   Serial.print("Username: ");
 #endif
-  addr++;
   for (int i = 0; i <= repeats; i++) {
     unsigned char output[16];
     char in[16];
@@ -109,13 +109,59 @@ int storeData(char * key, char * webHash, char * password, char * username, unsi
     }
 #ifdef DEBUG
     Serial.println();
+    Serial.println(addr - LenAddr - 1);
 #endif
   }
+
+  EEPROM.write(LenAddr, addr - LenAddr - 1);
 #ifdef DEBUG
   Serial.println(addr);
 #endif
   EEPROM.write(dataLenAddr, addr - dataLenAddr - 1);
   EEPROM.commit();
+}
+
+void pullData(unsigned int addr, String &password, String &username) {
+  int dataSize;
+  for (int i = 0; i < EEPROM_SIZE; i++) {
+    if (EEPROM.read(i) == NULL) {
+      dataSize = EEPROM.read(i + 1);
+      addr = i + 2;
+      break;
+    }
+  }
+  Serial.println("Size of data is: ");
+  Serial.print(dataSize);
+  Serial.println();
+  Serial.println("The website hash is: ");
+  for (int i = 0; i < 32; i++) {
+    Serial.print(EEPROM.read(addr + i), HEX);
+    Serial.print(" ");
+  }
+  addr += 32;
+  Serial.println();
+  Serial.println("The encrypted password length is: ");
+  int Len = EEPROM.read(addr);
+  Serial.print(Len);
+  Serial.println();
+  addr += 1;
+  for (int i = 0; i < Len; i++) {
+    Serial.print(EEPROM.read(addr + i), HEX);
+    password += String(EEPROM.read(addr + i));
+    Serial.print(" ");
+  }
+  addr += 32;
+  Serial.println();
+  Serial.println("The encrypted username length is: ");
+  Len = EEPROM.read(addr);
+  Serial.print(Len);
+  Serial.println();
+  addr += 1;
+  for (int i = 0; i < Len; i++) {
+    Serial.print(EEPROM.read(addr + i), HEX);
+    username += String(EEPROM.read(addr + i));
+    Serial.print(" ");
+  }
 }
 
 String getCode() {
@@ -164,48 +210,53 @@ String getCode() {
   }
 }
 
-bool checkHash(char attempt[], int startAddr) {
-  byte shaResult[32];
-  mbedtls_md_context_t ctx;
-  mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
-
-  const size_t payloadLength = strlen(attempt);
-
-  mbedtls_md_init(&ctx);
-  mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 0);
-  mbedtls_md_starts(&ctx);
-  mbedtls_md_update(&ctx, (unsigned char *) attempt, payloadLength);
-  mbedtls_md_finish(&ctx, shaResult);
-  mbedtls_md_free(&ctx);
-
-
-  Serial.println("Hash Created");
-  for (int i = 0; i < sizeof(shaResult); i++) {
-    Serial.println(shaResult[i], HEX);
-    if (EEPROM.read(i + startAddr) != shaResult[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
 bool Code() {
   byte tries = 0;
   while (tries < 3) {
-    char attempt[7];
     String val = getCode();
-    val.toCharArray(attempt, 7);
-    Serial.println(val);
-    for(int i = 0; i < 7; i++){
-      Serial.println(attempt[i], HEX);
-    }
-    if (checkHash(attempt, 0x20)) {
+    if (checkHash(val, 0x20)) {
+#ifdef DEBUG
       Serial.println("Code Successful");
+#endif
       return true;
-    }else{
+    } else {
+#ifdef DEBUG
       Serial.println("Code Unsuccessful");
+#endif
       tries++;
     }
   }
   return false;
 }
+
+int NextAvailAddr() {
+  for (int i = PACKETS_START_ADDR; i < EEPROM_SIZE; i++) {
+    if (EEPROM.read(i) == 0x00) {
+      i += EEPROM.read(i + 1);
+    }
+    if (EEPROM.read(i) == 0xFF) {
+      return i;
+    }
+  }
+}
+
+int findHash(String value) {
+  int addr = PACKETS_START_ADDR;
+  while (addr < EEPROM_SIZE) {
+#ifdef DEBUG
+    Serial.printf("Checking addr: %d\n", addr);
+#endif
+    if (EEPROM.read(addr) == 0x00) {
+      int len = EEPROM.read(addr + 1);
+      if (checkHash(value, addr + 2)) {
+        return addr;
+      } else {
+        addr += len + 1;
+      }
+    } else {
+      addr++;
+    }
+  }
+  return -1;
+}
+

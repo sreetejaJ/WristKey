@@ -16,7 +16,19 @@ void settings() {
 }
 
 void sysInfo() {
-
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_t0_17_tf);
+  u8g2.setCursor(0, 16);
+  u8g2.print("Chip ID:");
+  u8g2.setCursor(0, 30);
+  char buf[12];
+  uint64_t chipid = ESP.getEfuseMac();
+  sprintf(buf, "%04X%08X",chipid>>32, (uint32_t)chipid);
+  u8g2.print(buf);
+  u8g2.sendBuffer();
+  while(getInput() != 10){
+    
+  }
 }
 
 void selectFace() {

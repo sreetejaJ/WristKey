@@ -56,14 +56,14 @@ void setup() {
       char str[3];
       sprintf(str, "%02x", (int)shaResult[i]);
       Serial.print(str);
-      //EEPROM.write(i + addr, shaResult[i]);
+      EEPROM.write(i + addr, shaResult[i]);
     }
     addr += sizeof(shaResult);
 
     for(;addr < EEPROM_SIZE; addr++){
-      //EEPROM.write(addr, 0xFF);
+      EEPROM.write(addr, 0xFF);
     }
-    //EEPROM.commit();
+    EEPROM.commit();
     Serial.println("\nHash commited to memory\n\n");
     for(int i = 0; i < EEPROM_SIZE; i++){
       Serial.print(EEPROM.read(i), HEX);
