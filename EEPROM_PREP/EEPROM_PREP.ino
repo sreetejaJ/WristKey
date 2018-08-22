@@ -13,7 +13,7 @@ void setup() {
     Serial.print("failed to initialise EEPROM"); delay(1000000);
   }
 
-    char *payload = "SecurePassword42";                                         //This creates the password and then commits the hash to EEPROM at addr 0.
+    char *payload = "password";                                         //This creates the password and then commits the hash to EEPROM at addr 0.
     byte shaResult[32];
   
     mbedtls_md_context_t ctx;
@@ -35,10 +35,10 @@ void setup() {
       char str[3];
       sprintf(str, "%02x", (int)shaResult[i]);
       Serial.print(str);
-      //EEPROM.write(i + addr, shaResult[i]);
+      EEPROM.write(i + addr, shaResult[i]);
     }
     addr += sizeof(shaResult);
-    payload = "APPLES";                                         //This creates the password and then commits the hash to EEPROM at addr 0.
+    payload = "##A#P#P#L#E#S###";                                         //This creates the password and then commits the hash to EEPROM at addr 0.
   
     payloadLength = strlen(payload);
   

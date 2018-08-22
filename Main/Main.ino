@@ -65,6 +65,8 @@ int updateRate = 100;
 #define TAP_CODE_HASH_ADDR 0x20
 #define PACKETS_START_ADDR 0x40
 #define EEPROM_SIZE 4096
+
+String key;
 //***************************MEM_END*****************************
 
 //***************************BLE_START***************************
@@ -72,8 +74,13 @@ BLEServer *pServer = NULL;
 BLECharacteristic * pTxCharacteristic;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-uint8_t txValue = 0;
+bool newData = false;
+char BLEOutbuf[1024];
 bool verified = false;
+bool checkNeeded = false;
+bool deviceVerified = false;
+unsigned long verifyTime = 0;
+int timeout = 300000;
 
 #define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E" // UART service UUID
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -98,23 +105,23 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         for (int i = 0; i < 5; i ++) {
           cmd += rxValue[i];
         }
+
         String dataIn;
         for (int i = 5; i < rxValue.length(); i++) {
           dataIn += rxValue[i];
+          Serial.print(rxValue[i]);
         }
+        Serial.println();
         if (cmd == "MPWD:") {
 #ifdef DEBUG
           Serial.println(rxValue.length());
-          Serial.println(dataIn);
 #endif
           if (checkHash(dataIn, 0x00)) {
             verified = true;
           }
         }
         if (verified) {
-#ifdef DEBUG
-          Serial.println("Device Verified");
-#endif
+          inputAction(cmd, dataIn);
         }
       }
     }
@@ -203,16 +210,16 @@ void setup() {
   //***************************HARDWARE_STOP**********************
 
   //while(!Code());
-  //Serial.println(NextAvailAddr());
+  //Serial.println(getCode());
   String username;
   String password;
-//  storeData("abcdefghijklmnop", "www.facebook.com", "SecurePassword42", "ZuccIsUnHackable", NextAvailAddr());
-//  Serial.println(findHash("www.facebook.com"));
-//  if(findHash("www.facebook.com") > 0){
-//    pullData(findHash("www.facebook.com"), username, password);
-//  }else{
-//    Serial.println("Hash not found");
-//  }
+  //storeData("abcdefghijklmnop", "www.facebook.com", "Mr.Robot", "TheZuccIsUnHackable", NextAvailAddr());
+    Serial.println(findHash("www.facebook.com"));
+    if(findHash("www.facebook.com") > 0){
+      pullData(findHash("www.facebook.com"), username, password, "abcdefghijklmnop");
+    }else{
+      Serial.println("Hash not found");
+    }
   showTime();
 }
 

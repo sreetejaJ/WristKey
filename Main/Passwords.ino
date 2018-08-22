@@ -1,4 +1,4 @@
-void storeData(char * key, char * webHash, char * password, char * username, unsigned int addr) {
+void storeData(char * key, char * webHash, char * username, char * password, unsigned int addr) {
   //**************************************************************DATA HEADER**********************************************************
   EEPROM.write(addr, 0x00);                                                                       //Start with NULL
   int dataLenAddr = addr + 1;                                                                     //Save byte for data len
@@ -121,15 +121,10 @@ void storeData(char * key, char * webHash, char * password, char * username, uns
   EEPROM.commit();
 }
 
-void pullData(unsigned int addr, String &password, String &username) {
-  int dataSize;
-  for (int i = 0; i < EEPROM_SIZE; i++) {
-    if (EEPROM.read(i) == NULL) {
-      dataSize = EEPROM.read(i + 1);
-      addr = i + 2;
-      break;
-    }
-  }
+void pullData(unsigned int addr, String &password, String &username, char * key) {
+  
+  int dataSize = EEPROM.read(addr + 1);
+  addr += 2;
   Serial.println("Size of data is: ");
   Serial.print(dataSize);
   Serial.println();
@@ -140,34 +135,52 @@ void pullData(unsigned int addr, String &password, String &username) {
   }
   addr += 32;
   Serial.println();
-  Serial.println("The encrypted password length is: ");
   int Len = EEPROM.read(addr);
-  Serial.print(Len);
-  Serial.println();
+  Serial.printf("The encrypted password length is: %d\n", Len);
   addr += 1;
-  for (int i = 0; i < Len; i++) {
-    Serial.print(EEPROM.read(addr + i), HEX);
-    password += String(EEPROM.read(addr + i));
-    Serial.print(" ");
+  int repeats = Len / 16;
+  for (int j = 0; j < repeats; j++) {
+    unsigned char cipherText[16];
+    unsigned char decipheredText[16];
+    for (int i = 0; i < 16; i++) {
+      Serial.print(EEPROM.read(addr + i + j * 16), HEX);
+      cipherText[i] = char(EEPROM.read(addr + i + j * 16));
+      Serial.print(" ");
+    }
+    decrypt(cipherText, key, decipheredText);
+    for (int i = 0; i < 16; i++) {
+      if(decipheredText[i] != 35){
+        password += (char) decipheredText[i];
+      }
+    }
   }
-  addr += 32;
-  Serial.println();
-  Serial.println("The encrypted username length is: ");
+  addr += Len;
   Len = EEPROM.read(addr);
-  Serial.print(Len);
-  Serial.println();
+  Serial.printf("The encrypted username length is: %d\n", Len);
   addr += 1;
-  for (int i = 0; i < Len; i++) {
-    Serial.print(EEPROM.read(addr + i), HEX);
-    username += String(EEPROM.read(addr + i));
-    Serial.print(" ");
+  repeats = Len / 16;
+  for (int j = 0; j < repeats; j++) {
+    unsigned char cipherText[16];
+    unsigned char decipheredText[16];
+    for (int i = 0; i < 16; i++) {
+      Serial.print(EEPROM.read(addr + i + j * 16), HEX);
+      cipherText[i] = char(EEPROM.read(addr + i + j * 16));
+      Serial.print(" ");
+    }
+    decrypt(cipherText, key, decipheredText);
+    for (int i = 0; i < 16; i++) {
+      if(decipheredText[i] != 35){
+        username += (char) decipheredText[i];
+      }
+    }
   }
 }
+
 
 String getCode() {
   int pos = 0;
   int lastPos = 0;
-  String tapCode = "";
+  String tapCode = "##";
   byte tapPos = 0;
   while (true) {
     u8g2.clearBuffer();
@@ -176,7 +189,7 @@ String getCode() {
     u8g2.print("Enter Code");
     for (int i = 0; i < 6; i++) {
       u8g2.setCursor(40 + i * 15, 42);
-      if (tapCode.length() > i) {
+      if (tapPos > i) {
         u8g2.print("*");
       }
       u8g2.drawFrame(38 + i * 15, 31, 12, 13);
@@ -189,10 +202,12 @@ String getCode() {
       int val = getInput();
       if (val == 10) {
         tapCode += characters[pos];
+        tapCode += "#";
         if (tapPos >= 5) {
           u8g2.setCursor(40 + 5 * 15, 42);
           u8g2.print("*");
           delay(80);
+          tapCode += "##";
           return tapCode;
         }
         tapPos++;
@@ -213,8 +228,8 @@ String getCode() {
 bool Code() {
   byte tries = 0;
   while (tries < 3) {
-    String val = getCode();
-    if (checkHash(val, 0x20)) {
+    key = getCode();
+    if (checkHash(key, 0x20)) {
 #ifdef DEBUG
       Serial.println("Code Successful");
 #endif
@@ -244,7 +259,7 @@ int findHash(String value) {
   int addr = PACKETS_START_ADDR;
   while (addr < EEPROM_SIZE) {
 #ifdef DEBUG
-    Serial.printf("Checking addr: %d\n", addr);
+    //Serial.printf("Checking addr: %d\n", addr);
 #endif
     if (EEPROM.read(addr) == 0x00) {
       int len = EEPROM.read(addr + 1);
@@ -260,3 +275,19 @@ int findHash(String value) {
   return -1;
 }
 
+void decrypt(unsigned char * chipherText, char * key, unsigned char * outputBuffer) {
+
+  mbedtls_aes_context aes;
+
+  mbedtls_aes_init( &aes );
+  mbedtls_aes_setkey_dec( &aes, (const unsigned char*) key, strlen(key) * 8 );
+  mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_DECRYPT, (const unsigned char*)chipherText, outputBuffer);
+  mbedtls_aes_free( &aes );
+}
+
+char* convertString(String in){
+    if(in.length()!=0){
+        char *val = const_cast<char*>(in.c_str());
+        return val;
+    }
+}
