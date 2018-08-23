@@ -1,0 +1,17 @@
+To Do list
+
+[*]	Store and Retrive Passwords
+[*]	Encrypt data on flash
+[*]	Basic BLE communicaton framework
+[*]	Store and Retrieve over Bluetooth
+[*]	Basic, reliable user interface
+[*]	Simple desktop Client App
+[ ]	Display goes to sleep after timeout
+[ ]	Interface with IMU for gesture input 
+[ ]	Simple mobile Client App
+[ ]	Games
+[ ]	Strip down BLE library to save space
+[ ]	Design prototype PCB
+[ ]	Alarms
+[ ]	
+
