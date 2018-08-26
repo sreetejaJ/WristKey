@@ -291,3 +291,23 @@ char* convertString(String in){
         return val;
     }
 }
+
+void deleteData(int addr){
+  if(EEPROM.read(addr) == 0x00){
+    int startAddr = addr;
+    addr++;
+    int dataSize = EEPROM.read(addr);
+    addr += dataSize;
+    int i = 0;
+    while(i < EEPROM_SIZE - addr){
+      Serial.println(EEPROM.read(addr + i));
+      EEPROM.write(startAddr + i, EEPROM.read(addr + i));
+      i++;
+    }
+    while(i < EEPROM_SIZE){
+      EEPROM.write(i, 0xFF);
+      i++;
+    }
+  }
+}
+

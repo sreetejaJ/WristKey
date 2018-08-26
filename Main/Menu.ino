@@ -1,4 +1,4 @@
-int menu(String value1, String value2, String value3, String value4) {
+int menu(String value1, String value2, String value3, String value4, int def) {
   int pos = 0;
   int lastPos = 0;
   bool first = true;
@@ -9,6 +9,7 @@ int menu(String value1, String value2, String value3, String value4) {
   if (value4 != "") {
     num++;
   }
+  powerSaveTime = millis();
   while (true) {
     u8g2.clearBuffer();
     u8g2.setFont(u8g2_font_t0_17_tf);
@@ -29,6 +30,9 @@ int menu(String value1, String value2, String value3, String value4) {
         return pos;
       }
       pos += val;
+      if (didTimeOut()) {
+        return def;
+      }
     }
     if (pos > num) {
       pos = 0;
@@ -37,6 +41,19 @@ int menu(String value1, String value2, String value3, String value4) {
       pos = num;
     }
     lastPos = pos;
+    if (didTimeOut()) {
+      return def;
+    }
+  }
+}
+
+bool didTimeOut() {
+  if (millis() > powerSaveTime + powerTimeout) {
+    powerSaveTime = millis();
+    Serial.println("Timed out");
+    return true;
+  }else{
+    return false;
   }
 }
 

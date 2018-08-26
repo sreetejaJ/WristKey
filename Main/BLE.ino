@@ -7,6 +7,8 @@ void BLEMain() {
 
 void onCheckNeeded() {
   if (checkNeeded && !deviceVerified) {
+    u8g2.setPowerSave(0);
+    powerSaveTime = millis();
     if (Code()) {
       deviceVerified = true;
       checkNeeded = false;
@@ -37,8 +39,8 @@ void onNewData() {
 void onConnected() {
   // do stuff here on connecting
   if (deviceConnected && !oldDeviceConnected && verified) {
-    pTxCharacteristic->setValue("ACKN:");
-    pTxCharacteristic->notify();
+    sprintf(BLEOutbuf, "ACKN:%d", map(NextAvailAddr(), 0, EEPROM_SIZE, 0, 100));
+    newData = true;
     oldDeviceConnected = deviceConnected;
   }
 }
@@ -64,6 +66,8 @@ void inputAction(String command, String input) {
       String password;
       if (findHash(input) > 0) {
         if (key == "") {
+          u8g2.setPowerSave(0);
+          powerSaveTime = millis();
           key = getCode();
         }
         pullData(findHash(input), password, username, convertString(key));
@@ -100,9 +104,51 @@ void inputAction(String command, String input) {
     Serial.println(convertString(dataIn[1]));
     Serial.println(convertString(dataIn[2]));
     if (key == "") {
+      u8g2.setPowerSave(0);
+      powerSaveTime = millis();
       key = getCode();
     }
     storeData(convertString(key), convertString(dataIn[0]), convertString(dataIn[1]), convertString(dataIn[2]), NextAvailAddr());
+    sprintf(BLEOutbuf, "UPMM:%d", map(NextAvailAddr(), 0, EEPROM_SIZE, 0, 100));
+    newData = true;
+  } else if (command == "DELT:") {
+    if (findHash(input) > 0) {
+      deleteData(findHash(command));
+      sprintf(BLEOutbuf, "UPMM:%d", map(NextAvailAddr(), 0, EEPROM_SIZE, 0, 100));
+      newData = true;
+    } else {
+      sprintf(BLEOutbuf, "ERRO:4");
+      newData = true;
+    }
+  } else if (command == "GENP:") {
+    String dataIn[] = {"", "", ""};
+    int count = 0;
+    int i = 0;
+    while (i < input.length()) {
+      if (input.charAt(i) == '#') {
+        count++;
+        i++;
+        if (count > 2) {
+          Serial.println("data invalid");
+        }
+      }
+      dataIn[count] += input[i];
+      i++;
+    }
+    //Random Number Generation - Entropy could be increased
+    preferences.begin("settings", false);
+    String password = "";
+    for (int i = 0; i < 32; i++) {
+      long randomNum1;
+      long randomNum2;
+      randomSeed(analogRead(A0));
+      randomNum1 = random(26);
+      password += characters[randomNum1];
+    }
+    Serial.println(password);
+    sprintf(BLEOutbuf, "GENP:%s", password.c_str());
+    newData = true;
+    Serial.println("SENT DATA");
   } else {
     Serial.println("Command not found");
   }

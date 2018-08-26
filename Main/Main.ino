@@ -118,6 +118,9 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 #endif
           if (checkHash(dataIn, 0x00)) {
             verified = true;
+          } else {
+            sprintf(BLEOutbuf, "ERRO:2");
+            newData = true;
           }
         }
         if (verified) {
@@ -136,6 +139,9 @@ Preferences preferences;
 static byte button = 38;
 static byte encA = 37;
 static byte encB = 36;
+
+unsigned long powerSaveTime = 0;
+int powerTimeout = 15000;
 //***************************HARDWARE_STOP**********************
 void setup() {
 #ifdef DEBUG
@@ -207,19 +213,20 @@ void setup() {
   pinMode(button, INPUT);
   pinMode(encA, INPUT);
   pinMode(encB, INPUT);
+  powerSaveTime = millis();
   //***************************HARDWARE_STOP**********************
 
   //while(!Code());
   //Serial.println(getCode());
   String username;
-  String password;
   //storeData("abcdefghijklmnop", "www.facebook.com", "Mr.Robot", "TheZuccIsUnHackable", NextAvailAddr());
-    Serial.println(findHash("www.facebook.com"));
-    if(findHash("www.facebook.com") > 0){
-      pullData(findHash("www.facebook.com"), username, password, "abcdefghijklmnop");
-    }else{
-      Serial.println("Hash not found");
-    }
+  //    Serial.println(findHash("www.facebook.com"));
+  //    if(findHash("twitter") > 0){
+  //      deleteData(findHash("twitter"));
+  //    }
+  //else{
+  //      Serial.println("Hash not found");
+  //    }
   showTime();
 }
 
@@ -235,7 +242,7 @@ void loop() {
 #ifdef DEBUG
       Serial.println("Main Menu");
 #endif
-      switch (menu("Settings", "System Info", "Exit", "")) {
+      switch (menu("Settings", "System Info", "Exit", "", 2)) {
         case 0:
           settings();
           break;
@@ -254,6 +261,14 @@ void loop() {
       break;
   }
   BLEMain();
+  if (didTimeOut()) {
+    u8g2.setPowerSave(1);
+    while (getInput() == 0) {
+      BLEMain();
+    }
+    u8g2.setPowerSave(0);
+    powerSaveTime = millis();
+  }
 }
 
 int getInput() {

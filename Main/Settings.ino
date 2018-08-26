@@ -1,6 +1,6 @@
 void settings() {
   while (true) {
-    switch (menu("Select style", "Reset Device", "Exit", "")) {
+    switch (menu("Select style", "Reset Device", "Exit", "", 3)) {
       case 0:
         selectFace();
         break;
@@ -74,6 +74,9 @@ void selectFace() {
       pos = 1;
     }
     lastPos = pos;
+    if(didTimeOut()){
+      return;
+    }
   }
 }
 
