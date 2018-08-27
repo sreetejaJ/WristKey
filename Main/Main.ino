@@ -75,7 +75,7 @@ BLECharacteristic * pTxCharacteristic;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 bool newData = false;
-char BLEOutbuf[1024];
+char BLEOutbuf[2048];
 bool verified = false;
 bool checkNeeded = false;
 bool deviceVerified = false;
@@ -231,6 +231,7 @@ void setup() {
 }
 
 void loop() {
+  BLEMain();
   switch (page) {
     case 0:
 #ifdef DEBUG
@@ -260,15 +261,14 @@ void loop() {
     default:
       break;
   }
-  BLEMain();
-  if (didTimeOut()) {
-    u8g2.setPowerSave(1);
-    while (getInput() == 0) {
-      BLEMain();
-    }
-    u8g2.setPowerSave(0);
-    powerSaveTime = millis();
-  }
+//  if (didTimeOut()) {
+//    u8g2.setPowerSave(1);
+//    while (getInput() == 0) {
+//      BLEMain();
+//    }
+//    u8g2.setPowerSave(0);
+//    powerSaveTime = millis();
+//  }
 }
 
 int getInput() {

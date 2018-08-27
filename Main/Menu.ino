@@ -30,9 +30,6 @@ int menu(String value1, String value2, String value3, String value4, int def) {
         return pos;
       }
       pos += val;
-      if (didTimeOut()) {
-        return def;
-      }
     }
     if (pos > num) {
       pos = 0;
@@ -41,19 +38,6 @@ int menu(String value1, String value2, String value3, String value4, int def) {
       pos = num;
     }
     lastPos = pos;
-    if (didTimeOut()) {
-      return def;
-    }
-  }
-}
-
-bool didTimeOut() {
-  if (millis() > powerSaveTime + powerTimeout) {
-    powerSaveTime = millis();
-    Serial.println("Timed out");
-    return true;
-  }else{
-    return false;
   }
 }
 

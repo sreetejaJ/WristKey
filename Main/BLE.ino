@@ -78,7 +78,7 @@ void inputAction(String command, String input) {
         Serial.println(BLEOutbuf);
         newData = true;
       } else {
-        sprintf(BLEOutbuf, "ERRO:1");
+        sprintf(BLEOutbuf, "ERRO:%s", "1");
         newData = true;
         Serial.println("Hash not found");
       }
@@ -113,44 +113,34 @@ void inputAction(String command, String input) {
     newData = true;
   } else if (command == "DELT:") {
     if (findHash(input) > 0) {
-      deleteData(findHash(command));
+      deleteData(findHash(input));
       sprintf(BLEOutbuf, "UPMM:%d", map(NextAvailAddr(), 0, EEPROM_SIZE, 0, 100));
       newData = true;
     } else {
-      sprintf(BLEOutbuf, "ERRO:4");
+      sprintf(BLEOutbuf, "ERRO:%s", "4");
       newData = true;
     }
   } else if (command == "GENP:") {
-    String dataIn[] = {"", "", ""};
-    int count = 0;
-    int i = 0;
-    while (i < input.length()) {
-      if (input.charAt(i) == '#') {
-        count++;
-        i++;
-        if (count > 2) {
-          Serial.println("data invalid");
-        }
+    if (deviceVerified) {
+      Serial.println("Retrieving details");
+      String password;
+      for (int i = 0; i < 32; i++) {
+        long randomNum1;
+        long randomNum2;
+        randomNum1 = random(26);
+        password += characters[randomNum1];
       }
-      dataIn[count] += input[i];
-      i++;
+      sprintf(BLEOutbuf, "GENP:%s", password.c_str());
+      Serial.println(BLEOutbuf);
+      newData = true;
+    } else {
+      sprintf(BLEOutbuf, "ERRO:%s", "5");
+      newData = true;
+      Serial.println("Hash not found");
     }
-    //Random Number Generation - Entropy could be increased
-    preferences.begin("settings", false);
-    String password = "";
-    for (int i = 0; i < 32; i++) {
-      long randomNum1;
-      long randomNum2;
-      randomSeed(analogRead(A0));
-      randomNum1 = random(26);
-      password += characters[randomNum1];
-    }
-    Serial.println(password);
-    sprintf(BLEOutbuf, "GENP:%s", password.c_str());
-    newData = true;
-    Serial.println("SENT DATA");
   } else {
     Serial.println("Command not found");
   }
 }
+
 

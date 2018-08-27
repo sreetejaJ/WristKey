@@ -74,9 +74,6 @@ void selectFace() {
       pos = 1;
     }
     lastPos = pos;
-    if(didTimeOut()){
-      return;
-    }
   }
 }
 

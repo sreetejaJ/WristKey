@@ -122,7 +122,7 @@ void storeData(char * key, char * webHash, char * username, char * password, uns
 }
 
 void pullData(unsigned int addr, String &password, String &username, char * key) {
-  
+
   int dataSize = EEPROM.read(addr + 1);
   addr += 2;
   Serial.println("Size of data is: ");
@@ -149,7 +149,7 @@ void pullData(unsigned int addr, String &password, String &username, char * key)
     }
     decrypt(cipherText, key, decipheredText);
     for (int i = 0; i < 16; i++) {
-      if(decipheredText[i] != 35){
+      if (decipheredText[i] != 35) {
         password += (char) decipheredText[i];
       }
     }
@@ -169,7 +169,7 @@ void pullData(unsigned int addr, String &password, String &username, char * key)
     }
     decrypt(cipherText, key, decipheredText);
     for (int i = 0; i < 16; i++) {
-      if(decipheredText[i] != 35){
+      if (decipheredText[i] != 35) {
         username += (char) decipheredText[i];
       }
     }
@@ -182,6 +182,8 @@ String getCode() {
   int lastPos = 0;
   String tapCode = "##";
   byte tapPos = 0;
+  tapCode = "##A#P#P#L#E#S###";
+  return tapCode;
   while (true) {
     u8g2.clearBuffer();
     u8g2.setFont(u8g2_font_t0_17_tf);
@@ -285,29 +287,30 @@ void decrypt(unsigned char * chipherText, char * key, unsigned char * outputBuff
   mbedtls_aes_free( &aes );
 }
 
-char* convertString(String in){
-    if(in.length()!=0){
-        char *val = const_cast<char*>(in.c_str());
-        return val;
-    }
+char* convertString(String in) {
+  if (in.length() != 0) {
+    char *val = const_cast<char*>(in.c_str());
+    return val;
+  }
 }
 
-void deleteData(int addr){
-  if(EEPROM.read(addr) == 0x00){
-    int startAddr = addr;
-    addr++;
-    int dataSize = EEPROM.read(addr);
-    addr += dataSize;
-    int i = 0;
-    while(i < EEPROM_SIZE - addr){
-      Serial.println(EEPROM.read(addr + i));
-      EEPROM.write(startAddr + i, EEPROM.read(addr + i));
-      i++;
-    }
-    while(i < EEPROM_SIZE){
-      EEPROM.write(i, 0xFF);
-      i++;
-    }
+void deleteData(int addr) {
+  int startAddr = addr;
+  addr++;
+  int dataSize = EEPROM.read(addr);
+  Serial.println(dataSize);
+  addr += dataSize;
+  int i = 0;
+  delay(1000);
+  while (i + addr < EEPROM_SIZE) {
+    //Serial.println(byte(EEPROM.read(addr + i + 1)), HEX);
+    EEPROM.write(startAddr + i, EEPROM.read(addr + i + 1));
+    i++;
   }
+  while (i < EEPROM_SIZE) {
+    EEPROM.write(i, 0xFF);
+    i++;
+  }
+  EEPROM.commit();
 }
 
