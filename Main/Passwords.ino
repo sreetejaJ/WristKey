@@ -183,7 +183,7 @@ String getCode() {
   String tapCode = "##";
   byte tapPos = 0;
   tapCode = "##A#P#P#L#E#S###";
-  return tapCode;
+  //return tapCode;
   while (true) {
     u8g2.clearBuffer();
     u8g2.setFont(u8g2_font_t0_17_tf);

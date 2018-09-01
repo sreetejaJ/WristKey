@@ -1,13 +1,16 @@
 void settings() {
   while (true) {
-    switch (menu("Select style", "Reset Device", "Exit", "", 3)) {
+    switch (menu("Select style", "Set timeout", "Reset Device", "Exit", 3)) {
       case 0:
         selectFace();
         break;
       case 1:
-        resetDevice();
+        setTimeoutVal();
         break;
       case 2:
+        resetDevice();
+        break;
+      case 3:
         return;
       default:
         break;
@@ -132,6 +135,38 @@ void resetDevice() {
         no = !no;
       }
     }
+  }
+}
+
+void setTimeoutVal() {
+  int lastTimeout = timeout;
+  preferences.begin("settings", false);
+  while (true) {
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_t0_17_tf);
+    u8g2.setCursor(0, 15);
+    u8g2.print("Timeout:");
+    u8g2.setCursor(10, 40);
+    Serial.println("Setting timeout");
+    u8g2.printf("< %d s >", lastTimeout / 1000);
+    u8g2.setCursor(0, 60);
+    u8g2.print("Press to exit");
+    u8g2.sendBuffer();
+    while (timeout == lastTimeout) {
+      int val = getInput();
+      if (val == 10) {
+        return;
+      } else if (val != 0) {
+        timeout += val * 30;
+        Serial.printf("%d\n", timeout);
+      }
+    }
+    if (timeout < 0) {
+      timeout = 600000;
+    } if (timeout > 600000); {
+      timeout = 30000;
+    }
+    lastTimeout = timeout;
   }
 }
 

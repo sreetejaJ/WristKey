@@ -58,6 +58,9 @@ U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, 
 int page = 0;
 unsigned long timenow = 0;
 int updateRate = 100;
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
 //***************************OLED_END****************************
 
 //***************************MEM_START***************************
@@ -143,6 +146,15 @@ static byte encB = 36;
 unsigned long powerSaveTime = 0;
 int powerTimeout = 15000;
 //***************************HARDWARE_STOP**********************
+
+//***************************GAMES_START************************
+#define BALL_SIZE 6
+#define PAD_HEIGHT 20
+#define PAD_WIDTH 5
+#define SPEED 10
+//***************************GAMES_STOP************************
+
+
 void setup() {
 #ifdef DEBUG
   Serial.begin(115200);
@@ -216,6 +228,13 @@ void setup() {
   powerSaveTime = millis();
   //***************************HARDWARE_STOP**********************
 
+  //***************************PREFERENCES_START******************
+  preferences.begin("settings", false);
+  if(preferences.getUInt("timeout", 0) != 0){
+    timeout = preferences.getUInt("timeout", 0);                  // Timeout preference
+  }
+  //***************************PREFERENCES_STOP*******************
+  
   //while(!Code());
   //Serial.println(getCode());
   String username;
@@ -227,6 +246,7 @@ void setup() {
   //else{
   //      Serial.println("Hash not found");
   //    }
+  //Pong();
   showTime();
 }
 
