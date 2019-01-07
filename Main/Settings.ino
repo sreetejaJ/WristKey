@@ -2,7 +2,7 @@ void settings() {
   while (true) {
     switch (menu("Select style", "Set timeout", "Reset Device", "Exit", 3)) {
       case 0:
-        selectFace();
+        //selectFace();
         break;
       case 1:
         setTimeoutVal();
@@ -24,14 +24,16 @@ void sysInfo() {
   u8g2.setCursor(0, 16);
   u8g2.print("Chip ID:");
   u8g2.setCursor(0, 30);
-  char buf[12];
+  char buf[13];
   uint64_t chipid = ESP.getEfuseMac();
-  sprintf(buf, "%04X%08X", chipid >> 32, (uint32_t)chipid);
+  sprintf(buf, "%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
   u8g2.print(buf);
   u8g2.sendBuffer();
-  while (getInput() != 10) {
-
+  int val = 0;
+  while (val != 10) {
+   xQueueReceive(queue, &val, 0);
   }
+  return;
 }
 
 void selectFace() {

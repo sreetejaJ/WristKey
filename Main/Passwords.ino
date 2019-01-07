@@ -182,7 +182,7 @@ String getCode() {
   int lastPos = 0;
   String tapCode = "##";
   byte tapPos = 0;
-  tapCode = "##A#P#P#L#E#S###";
+  //tapCode = "##A#P#P#L#E#S###";
   //return tapCode;
   while (true) {
     u8g2.clearBuffer();
@@ -312,5 +312,35 @@ void deleteData(int addr) {
     i++;
   }
   EEPROM.commit();
+}
+
+bool checkHash(String value, int startAddr) {
+  char attempt[value.length()];
+  value.toCharArray(attempt, value.length() + 1);
+
+  byte shaResult[32];
+  mbedtls_md_context_t ctx;
+  mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
+
+  const size_t payloadLength = strlen(attempt);
+
+  mbedtls_md_init(&ctx);
+  mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 0);
+  mbedtls_md_starts(&ctx);
+  mbedtls_md_update(&ctx, (unsigned char *) attempt, payloadLength);
+  mbedtls_md_finish(&ctx, shaResult);
+  mbedtls_md_free(&ctx);
+
+
+  for (int i = 0; i < sizeof(shaResult); i++) {
+    //Serial.print(shaResult[i], HEX);
+    //Serial.print(" ");
+    if (EEPROM.read(i + startAddr) != shaResult[i]) {
+      //Serial.println();
+      return false;
+    }
+  }
+  //Serial.println();
+  return true;
 }
 

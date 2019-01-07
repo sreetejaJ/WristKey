@@ -21,11 +21,16 @@ int menu(String value1, String value2, String value3, String value4, int def) {
     u8g2.print(value3);
     u8g2.setCursor(10, 64);
     u8g2.print(value4);
-    Serial.println(pos);
+    //Serial.println(pos);
     u8g2.drawBox(0, pos * 16 + 4, 7, 13);
     u8g2.sendBuffer();
+    //int val;
     while (pos == lastPos) {
-      int val = getInput();
+      int val = 0;
+      if(xQueueReceive(queue, &val, 0)){
+        Serial.print(val);
+        Serial.print(" from queue\n");
+      }
       if (val == 10) {
         return pos;
       }

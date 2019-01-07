@@ -24,6 +24,11 @@ void onCheckNeeded() {
     newData = true;
     verifyTime = millis();
     key = "";
+  }  
+  if(millis() > connectTime + connectTimeout){
+    pServer->disconnectClient();
+    Serial.println("Disconnecting due to 10min timeout");
+    connectTime = millis();
   }
 }
 
@@ -39,6 +44,7 @@ void onNewData() {
 void onConnected() {
   // do stuff here on connecting
   if (deviceConnected && !oldDeviceConnected && verified) {
+    connectTime = millis();
     sprintf(BLEOutbuf, "ACKN:%d", map(NextAvailAddr(), 0, EEPROM_SIZE, 0, 100));
     newData = true;
     oldDeviceConnected = deviceConnected;
