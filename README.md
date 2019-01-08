@@ -28,5 +28,8 @@ TODO:
   
 Pinout Reference:
 --------------------------
-
 ![alt text](https://i.ebayimg.com/images/g/jXwAAOSwskFZgyPB/s-l1600.jpg)
+
+Notes:
+--------------------------
+Save 12ish kb of program space by removing strings from BLEUtils (https://github.com/espressif/arduino-esp32/issues/1075)
