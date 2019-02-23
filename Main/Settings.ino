@@ -22,9 +22,12 @@ void sysInfo() {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_t0_17_tf);
   u8g2.setCursor(0, 16);
+  char buf[20];
+  u8g2.print("WrskOS:v");
+  u8g2.print(VERSION);
+  u8g2.setCursor(0, 32);
   u8g2.print("Chip ID:");
-  u8g2.setCursor(0, 30);
-  char buf[13];
+  u8g2.setCursor(0, 48);
   uint64_t chipid = ESP.getEfuseMac();
   sprintf(buf, "%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
   u8g2.print(buf);

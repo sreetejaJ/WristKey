@@ -13,4 +13,5 @@ To Do list
 [ ]	Strip down BLE library to save space
 [ ]	Design prototype PCB
 [ ]	Alarms
-
+[ ]	Remove RTC module and get time over BLE
+[ ]	Add Apple Notification support

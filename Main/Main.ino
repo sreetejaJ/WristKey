@@ -1,4 +1,4 @@
-#include <Arduino.h>
+ #include <Arduino.h>
 #include <U8g2lib.h>
 #include <Wire.h>
 #include <RtcDS3231.h>
@@ -12,7 +12,7 @@
 #include <Preferences.h>
 
 #define DEBUG    // For use when testing, set 0 for final upload
-
+#define VERSION  "0.2.1"
 
 bool checkHash(String value, int startAddr);
 void inputAction(String command, String input);
@@ -295,51 +295,23 @@ void loop() {
     default:
       break;
   }
-  int val;
-  if(xQueueReceive(queue, &val, 0)){
-   Serial.println("Data from queue");
-   if(val == 10){
+  if(getInput() == 10){
     page = 1;
-   }
   }
-  //  if (didTimeOut()) {
-  //    u8g2.setPowerSave(1);
-  //    while (getInput() == 0) {
-  //      BLEMain();
-  //    }
-  //    u8g2.setPowerSave(0);
-  //    powerSaveTime = millis();
-  //  }
+//  if (didTimeOut()) {
+//    u8g2.setPowerSave(1);
+//    while (getInput() == 0) {
+//      BLEMain();
+//    }
+//    u8g2.setPowerSave(0);
+//    powerSaveTime = millis();
+//  }
 }
 
 int getInput() {
-  if (!digitalRead(button)) {
-    while (!digitalRead(button)) {
-
-    }
-#ifdef DEBUG
-    Serial.println("Button Pressed");
-#endif
-    return 10;
-  }
-  if (!digitalRead(encA) && digitalRead(encB)) {
-    while (!digitalRead(encA) || !digitalRead(encB)) {
-      delay(10);
-    }
-#ifdef DEBUG
-    Serial.println("Encoder Decreased");
-#endif
-    return 1;
-  } else if (!digitalRead(encB) && digitalRead(encA)) {
-    while (!digitalRead(encA) || !digitalRead(encB)) {
-      delay(10);
-    }
-#ifdef DEBUG
-    Serial.println("Encoder Increased");
-#endif
-    return -1;
-  }
-  return 0;
+  int val = 0;
+  xQueueReceive(queue, &val, 0);
+  return val;
 }
 
 #define WristKeyLogoSmall_width 64

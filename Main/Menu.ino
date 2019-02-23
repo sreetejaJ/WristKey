@@ -26,11 +26,7 @@ int menu(String value1, String value2, String value3, String value4, int def) {
     u8g2.sendBuffer();
     //int val;
     while (pos == lastPos) {
-      int val = 0;
-      if(xQueueReceive(queue, &val, 0)){
-        Serial.print(val);
-        Serial.print(" from queue\n");
-      }
+      int val = getInput();
       if (val == 10) {
         return pos;
       }

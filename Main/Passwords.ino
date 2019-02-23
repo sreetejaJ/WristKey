@@ -261,7 +261,7 @@ int findHash(String value) {
   int addr = PACKETS_START_ADDR;
   while (addr < EEPROM_SIZE) {
 #ifdef DEBUG
-    //Serial.printf("Checking addr: %d\n", addr);
+    Serial.printf("Checking addr: %d\n", addr);
 #endif
     if (EEPROM.read(addr) == 0x00) {
       int len = EEPROM.read(addr + 1);
